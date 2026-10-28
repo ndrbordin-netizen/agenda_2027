@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda 2027 · Configuratore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --navy:#1b3259; --navy2:#243f6c; --cream:#f5f0e6; --ink:#1d1d1d; --muted:#6b6f78;
+  --line:#dcd6ca; --card:#ffffff; --bg:#f5f0e6; --accent:#1b3259; --on-accent:#ffffff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#eef0f4; --muted:#a6adbb; --line:#34405a; --card:#16223a; --bg:#0f1829;
+    --accent:#f5f0e6; --on-accent:#1b3259;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#eef0f4; --muted:#a6adbb; --line:#34405a; --card:#16223a; --bg:#0f1829;
+  --accent:#f5f0e6; --on-accent:#1b3259;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Poppins,system-ui,sans-serif;font-weight:400;line-height:1.5}
+header{background:var(--navy);color:#fff;padding:28px 16px 34px}
+.wrap{max-width:760px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-family:Lora,serif;font-weight:700;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:var(--cream);opacity:.85}
+.langs{display:flex;gap:6px}
+.langs button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:999px;padding:4px 12px;font:500 13px Poppins,sans-serif;cursor:pointer}
+.langs button.on{background:var(--cream);color:var(--navy);border-color:var(--cream)}
+h1{font-family:Lora,serif;font-weight:700;font-size:clamp(30px,6vw,46px);line-height:1.1;margin:26px 0 8px}
+header p{margin:0;color:var(--cream);font-weight:300;font-size:16px;max-width:560px}
+main{padding:24px 16px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 20px;margin-bottom:16px}
+.step{display:flex;gap:12px;align-items:baseline;margin-bottom:14px}
+.num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-weight:600;font-size:14px}
+h2{font-family:Lora,serif;font-weight:700;font-size:21px;margin:0}
+.hint{color:var(--muted);font-size:14px;margin:-6px 0 14px 40px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.opt{position:relative;display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,background .15s}
+.opt:hover{border-color:var(--muted)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.mark{flex:none;width:20px;height:20px;border:1.5px solid var(--muted);border-radius:50%;margin-top:2px;display:grid;place-items:center}
+.opt.cb .mark{border-radius:5px}
+.opt input:checked ~ .mark{background:var(--accent);border-color:var(--accent)}
+.opt input:checked ~ .mark::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--on-accent)}
+.opt.cb input:checked ~ .mark::after{width:10px;height:6px;border-radius:0;background:none;border-left:2px solid var(--on-accent);border-bottom:2px solid var(--on-accent);transform:rotate(-45deg) translate(1px,-1px)}
+.opt:has(input:checked){border-color:var(--accent)}
+.opt:not(.locked):has(input:disabled){opacity:.45;cursor:not-allowed}
+.opt.locked{cursor:default}
+.opt:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.opt b{display:block;font-weight:600;font-size:15px}
+.opt small{display:block;color:var(--muted);font-size:13px;line-height:1.4;margin-top:2px}
+.opt .fixed{position:absolute;top:10px;right:12px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.summary{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.summary .pages{color:var(--muted);font-size:14px}
+.summary .pages strong{color:var(--ink);font-size:20px;font-weight:600;margin-right:4px}
+.go{background:var(--accent);color:var(--on-accent);border:0;border-radius:999px;padding:14px 28px;font:600 16px Poppins,sans-serif;cursor:pointer;min-width:220px}
+.go:disabled{opacity:.6;cursor:progress}
+.status{margin:12px 0 0;font-size:14px;color:var(--muted);min-height:21px}
+.help{font-size:14px;color:var(--muted)}
+.help h3{font-family:Lora,serif;color:var(--ink);font-size:17px;margin:0 0 8px}
+.help ul{margin:0;padding-left:18px}
+.help li{margin:4px 0}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:0 16px 30px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand" data-t="brand"></div>
+      <div class="langs" role="group" aria-label="Language">
+        <button data-lang="it">IT</button><button data-lang="en">EN</button><button data-lang="fr">FR</button><button data-lang="de">DE</button>
+      </div>
+    </div>
+    <h1 data-t="h1"></h1>
+    <p data-t="intro"></p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <div class="step"><span class="num">1</span><h2 data-t="q_hand"></h2></div>
+    <p class="hint" data-t="q_hand_h"></p>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="hand" value="right" checked><span class="mark"></span><span><b data-t="right"></b><small data-t="right_s"></small></span></label>
+      <label class="opt"><input type="radio" name="hand" value="left"><span class="mark"></span><span><b data-t="left"></b><small data-t="left_s"></small></span></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="step"><span class="num">2</span><h2 data-t="q_start"></h2></div>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="start" value="mon" checked><span class="mark"></span><span><b data-t="mon"></b></span></label>
+      <label class="opt"><input type="radio" name="start" value="sun"><span class="mark"></span><span><b data-t="sun"></b></span></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="step"><span class="num">3</span><h2 data-t="q_sec"></h2></div>
+    <p class="hint" data-t="q_sec_h"></p>
+    <div class="opts">
+      <label class="opt cb locked"><input type="checkbox" checked disabled><span class="mark"></span><span><b data-t="s_month"></b><small data-t="s_month_s"></small></span><span class="fixed" data-t="incl"></span></label>
+      <label class="opt cb"><input type="checkbox" name="weekly" checked><span class="mark"></span><span><b data-t="s_week"></b><small data-t="s_week_s"></small></span></label>
+      <label class="opt cb"><input type="checkbox" name="daily" checked><span class="mark"></span><span><b data-t="s_day"></b><small data-t="s_day_s"></small></span></label>
+      <label class="opt cb"><input type="checkbox" name="dnotes"><span class="mark"></span><span><b data-t="s_dn"></b><small data-t="s_dn_s"></small></span></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="summary">
+      <div class="pages"><strong id="pc">0</strong><span data-t="pages"></span></div>
+      <button class="go" id="go" data-t="go"></button>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+  </section>
+
+  <section class="card help">
+    <h3 data-t="how_t"></h3>
+    <ul>
+      <li data-t="how1"></li>
+      <li data-t="how2"></li>
+      <li data-t="how3"></li>
+    </ul>
+  </section>
+</main>
+<footer data-t="foot"></footer>
+
+<script>
+/* ======================= TESTI ======================= */
+const UI = {
+ it:{brand:"Agenda 2027",h1:"Crea la tua agenda 2027",intro:"Grazie per l'acquisto! Scegli come vuoi la tua agenda: il PDF viene creato su misura e scaricato subito.",
+  q_hand:"Con quale mano scrivi?",q_hand_h:"Le schede dei mesi vanno sul lato opposto, così la mano non le copre.",
+  right:"Destra",right_s:"Schede a destra",left:"Sinistra",left_s:"Schede a sinistra",
+  q_start:"La settimana inizia di…",mon:"Lunedì",sun:"Domenica",
+  q_sec:"Quali sezioni vuoi?",q_sec_h:"Tieni solo quello che usi davvero: meno pagine, file più leggero.",
+  s_month:"Mensile",s_month_s:"Calendario annuale, 12 mesi, cose da fare e appunti",incl:"incluso",
+  s_week:"Planning settimanale",s_week_s:"Una pagina per ogni settimana",
+  s_day:"Daily planner",s_day_s:"Una pagina per ogni giorno: priorità, cose da fare, appunti",
+  s_dn:"Pagina note giornaliera",s_dn_s:"Una pagina rigata in più per ogni giorno",
+  pages:"pagine con collegamenti",go:"Crea il mio PDF",busy:"Sto creando la tua agenda…",done:"Fatto! Il download è partito: {f}",err:"Qualcosa non ha funzionato. Ricarica la pagina e riprova.",
+  how_t:"Come usarla",how1:"iPad: apri il PDF da File e scegli Goodnotes (o Notability, Noteshelf).",how2:"Supernote, reMarkable, Boox, Kindle Scribe: trasferisci il PDF con l'app del produttore, il cloud o il cavo USB.",how3:"Puoi tornare su questa pagina e creare un'altra versione quando vuoi.",
+  foot:"Uso personale · Prodotto indipendente, non affiliato ai marchi citati"},
+ en:{brand:"2027 Planner",h1:"Build your 2027 planner",intro:"Thank you for your purchase! Choose your options: your PDF is generated on the spot and downloaded right away.",
+  q_hand:"Which hand do you write with?",q_hand_h:"Month tabs go on the opposite side so your hand never covers them.",
+  right:"Right",right_s:"Tabs on the right",left:"Left",left_s:"Tabs on the left",
+  q_start:"Your week starts on…",mon:"Monday",sun:"Sunday",
+  q_sec:"Which sections do you want?",q_sec_h:"Keep only what you'll use: fewer pages, lighter file.",
+  s_month:"Monthly",s_month_s:"Year calendar, 12 months, to-do lists and notes",incl:"included",
+  s_week:"Weekly planner",s_week_s:"One page for every week",
+  s_day:"Daily planner",s_day_s:"One page for every day: priorities, to-do, notes",
+  s_dn:"Daily notes page",s_dn_s:"An extra lined page for every day",
+  pages:"hyperlinked pages",go:"Create my PDF",busy:"Creating your planner…",done:"Done! Your download has started: {f}",err:"Something went wrong. Please reload the page and try again.",
+  how_t:"How to use it",how1:"iPad: open the PDF from Files and choose Goodnotes (or Notability, Noteshelf).",how2:"Supernote, reMarkable, Boox, Kindle Scribe: transfer the PDF with the maker's app, cloud or USB cable.",how3:"You can come back to this page and create another version any time.",
+  foot:"Personal use only · Independent product, not affiliated with the brands mentioned"},
+ fr:{brand:"Agenda 2027",h1:"Créez votre agenda 2027",intro:"Merci pour votre achat ! Choisissez vos options : votre PDF est créé sur mesure et téléchargé aussitôt.",
+  q_hand:"De quelle main écrivez-vous ?",q_hand_h:"Les onglets des mois sont placés du côté opposé, pour ne pas être cachés par la main.",
+  right:"Droite",right_s:"Onglets à droite",left:"Gauche",left_s:"Onglets à gauche",
+  q_start:"La semaine commence le…",mon:"Lundi",sun:"Dimanche",
+  q_sec:"Quelles sections voulez-vous ?",q_sec_h:"Gardez seulement ce que vous utilisez : moins de pages, fichier plus léger.",
+  s_month:"Mensuel",s_month_s:"Calendrier annuel, 12 mois, listes à faire et notes",incl:"inclus",
+  s_week:"Planning hebdomadaire",s_week_s:"Une page pour chaque semaine",
+  s_day:"Agenda journalier",s_day_s:"Une page par jour : priorités, à faire, notes",
+  s_dn:"Page de notes quotidienne",s_dn_s:"Une page lignée en plus pour chaque jour",
+  pages:"pages avec liens",go:"Créer mon PDF",busy:"Création de votre agenda…",done:"C'est fait ! Le téléchargement a commencé : {f}",err:"Un problème est survenu. Rechargez la page et réessayez.",
+  how_t:"Comment l'utiliser",how1:"iPad : ouvrez le PDF depuis Fichiers et choisissez Goodnotes (ou Notability, Noteshelf).",how2:"Supernote, reMarkable, Boox, Kindle Scribe : transférez le PDF via l'app du fabricant, le cloud ou un câble USB.",how3:"Vous pouvez revenir sur cette page et créer une autre version quand vous voulez.",
+  foot:"Usage personnel · Produit indépendant, non affilié aux marques citées"},
+ de:{brand:"Planer 2027",h1:"Gestalte deinen Planer 2027",intro:"Danke für deinen Kauf! Wähle deine Optionen: Dein PDF wird sofort passend erstellt und heruntergeladen.",
+  q_hand:"Mit welcher Hand schreibst du?",q_hand_h:"Die Monatsregister liegen auf der Gegenseite, damit die Hand sie nicht verdeckt.",
+  right:"Rechts",right_s:"Register rechts",left:"Links",left_s:"Register links",
+  q_start:"Deine Woche beginnt am…",mon:"Montag",sun:"Sonntag",
+  q_sec:"Welche Bereiche möchtest du?",q_sec_h:"Nimm nur, was du wirklich nutzt: weniger Seiten, kleinere Datei.",
+  s_month:"Monat",s_month_s:"Jahreskalender, 12 Monate, Aufgaben und Notizen",incl:"inklusive",
+  s_week:"Wochenplaner",s_week_s:"Eine Seite pro Woche",
+  s_day:"Tagesplaner",s_day_s:"Eine Seite pro Tag: Prioritäten, Aufgaben, Notizen",
+  s_dn:"Tägliche Notizseite",s_dn_s:"Eine zusätzliche linierte Seite pro Tag",
+  pages:"verlinkte Seiten",go:"Mein PDF erstellen",busy:"Dein Planer wird erstellt…",done:"Fertig! Der Download hat begonnen: {f}",err:"Etwas ist schiefgelaufen. Bitte lade die Seite neu und versuche es nochmal.",
+  how_t:"So nutzt du ihn",how1:"iPad: PDF in der Dateien-App öffnen und Goodnotes wählen (oder Notability, Noteshelf).",how2:"Supernote, reMarkable, Boox, Kindle Scribe: PDF per Hersteller-App, Cloud oder USB-Kabel übertragen.",how3:"Du kannst jederzeit zurückkommen und eine weitere Version erstellen.",
+  foot:"Nur privater Gebrauch · Unabhängiges Produkt, nicht mit den genannten Marken verbunden"}
+};
+
+const P = {
+ it:{months:["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"],
+     short:["GEN","FEB","MAR","APR","MAG","GIU","LUG","AGO","SET","OTT","NOV","DIC"],
+     days:["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"],d1:"LMMGVSD",
+     year:"ANNO",cal:"CAL",todo:"TO DO",notes:"NOTE",wk:"S",t_year:"Calendario annuale",t_todo:"Cose da fare",t_notes:"Appunti",
+     title:"Agenda",sub:"Calendario · Cose da fare · Appunti",week:"Settimana",bWeek:"SETT.",bMonth:"MESE",bDay:"GIORNO",
+     prio:"Priorità",tasks:"Cose da fare",dnotes:"Appunti",doy:"Giorno {n} di 365",file:"Agenda_2027",
+     hand:{right:"Destrimani",left:"Mancini"},start:{mon:"Lunedi",sun:"Domenica"}},
+ en:{months:["January","February","March","April","May","June","July","August","September","October","November","December"],
+     short:["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"],
+     days:["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],d1:"MTWTFSS",
+     year:"YEAR",cal:"CAL",todo:"TO DO",notes:"NOTES",wk:"W",t_year:"Year calendar",t_todo:"To do list",t_notes:"Notes",
+     title:"Planner",sub:"Calendar · To do · Notes",week:"Week",bWeek:"WEEK",bMonth:"MONTH",bDay:"DAY",
+     prio:"Top priorities",tasks:"To do",dnotes:"Notes",doy:"Day {n} of 365",file:"Planner_2027",
+     hand:{right:"Right-Handed",left:"Left-Handed"},start:{mon:"Monday",sun:"Sunday"}},
+ fr:{months:["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"],
+     short:["JAN","FÉV","MAR","AVR","MAI","JUI","JUL","AOÛ","SEP","OCT","NOV","DÉC"],
+     days:["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"],d1:"LMMJVSD",
+     year:"ANNÉE",cal:"CAL",todo:"À FAIRE",notes:"NOTES",wk:"S",t_year:"Calendrier annuel",t_todo:"Choses à faire",t_notes:"Notes",
+     title:"Agenda",sub:"Calendrier · À faire · Notes",week:"Semaine",bWeek:"SEM.",bMonth:"MOIS",bDay:"JOUR",
+     prio:"Priorités",tasks:"À faire",dnotes:"Notes",doy:"Jour {n} sur 365",file:"Agenda_2027",
+     hand:{right:"Droitiers",left:"Gauchers"},start:{mon:"Lundi",sun:"Dimanche"}},
+ de:{months:["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"],
+     short:["JAN","FEB","MÄR","APR","MAI","JUN","JUL","AUG","SEP","OKT","NOV","DEZ"],
+     days:["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"],d1:"MDMDFSS",
+     year:"JAHR",cal:"KAL",todo:"TO DO",notes:"NOTIZEN",wk:"KW",t_year:"Jahreskalender",t_todo:"Aufgaben",t_notes:"Notizen",
+     title:"Planer",sub:"Kalender · Aufgaben · Notizen",week:"Woche",bWeek:"WOCHE",bMonth:"MONAT",bDay:"TAG",
+     prio:"Prioritäten",tasks:"Aufgaben",dnotes:"Notizen",doy:"Tag {n} von 365",file:"Planer_2027",
+     hand:{right:"Rechtshaender",left:"Linkshaender"},start:{mon:"Montag",sun:"Sonntag"}}
+};
+
+/* ======================= DATE ======================= */
+const Y = 2027;
+const D = (y,m,d) => new Date(Date.UTC(y,m-1,d));
+const addDays = (d,n) => new Date(d.getTime() + n*864e5);
+const wd = d => (d.getUTCDay()+6)%7;           // 0 = lunedì
+const iso = d => d.toISOString().slice(0,10);
+function isoWeek(d){ const t=new Date(d.getTime()); t.setUTCDate(t.getUTCDate()+3-wd(t));
+  const w1=new Date(Date.UTC(t.getUTCFullYear(),0,4)); return 1+Math.round(((t-w1)/864e5-3+wd(w1))/7); }
+const doyOf = d => Math.round((d - D(Y,1,1))/864e5)+1;
+const two = n => String(n).padStart(2,"0");
+
+/* ======================= GENERATORE PDF ======================= */
+const W=702, H=936, TAB=40, GAP=22, EDGE=26;
+const BLACK=[0,0,0], GREY=[110,110,110], LGREY=[189,189,189], FILL=[236,236,236];
+
+function buildPlanner(o){
+  const t = P[o.lang];
+  const left = o.hand === "left";
+  const sunday = o.start === "sun";
+  const startWd = sunday ? 6 : 0;
+  const order = sunday ? [6,0,1,2,3,4,5] : [0,1,2,3,4,5,6];
+  const x0 = left ? TAB+GAP : EDGE, x1 = left ? W-EDGE : W-TAB-GAP, tabx = left ? 0 : W-TAB;
+  const weekStartOf = d => addDays(d, -((wd(d) - startWd + 7) % 7));
+  const mondayOf = ws => sunday ? addDays(ws,1) : ws;
+
+  // settimane dell'anno
+  const weeks=[]; for(let ws=weekStartOf(D(Y,1,1)); ws<=D(Y,12,31); ws=addDays(ws,7)) weeks.push(ws);
+  const weekIdx = d => Math.round((weekStartOf(d) - weeks[0]) / (7*864e5));
+  const days=[]; for(let d=D(Y,1,1); d<=D(Y,12,31); d=addDays(d,1)) days.push(d);
+
+  // ---- piano pagine ----
+  const keys=[]; const add=k=>keys.push(k);
+  add("cover"); add("y"); add("yt"); add("yn");
+  for(let m=1;m<=12;m++){ add("m"+m); add("m"+m+"t"); add("m"+m+"n"); }
+  if(o.weekly) weeks.forEach((_,i)=>add("w"+i));
+  if(o.daily) days.forEach(d=>{ add("d"+iso(d)); if(o.dnotes) add("n"+iso(d)); });
+  const idx={}; keys.forEach((k,i)=>idx[k]=i+1);
+  if(o.countOnly) return keys.length;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"pt", format:[W,H], orientation:"portrait", compress:true});
+  doc.setProperties({title:`${t.title} ${Y}`});
+  const link=(k,x,y,w,h)=>{ if(idx[k]) doc.link(x,y,w,h,{pageNumber:idx[k]}); };
+  const font=(s,b)=>{ doc.setFont("helvetica", b?"bold":"normal"); doc.setFontSize(s); };
+  const col=c=>doc.setTextColor(...c);
+
+  function tabs(active){
+    const items=[[t.year,"y"]].concat(t.short.map((s,i)=>[s,"m"+(i+1)]));
+    const top=40, th=(H-80)/13;
+    items.forEach(([lab,k],i)=>{
+      const y=top+i*th, on=k===active;
+      doc.setDrawColor(...BLACK); doc.setLineWidth(0.8);
+      doc.setFillColor(...(on?BLACK:FILL)); doc.rect(tabx,y,TAB,th,"FD");
+      font(10.5,true); col(on?[255,255,255]:BLACK);
+      const tw=doc.getTextWidth(lab), cx=tabx+TAB/2, cy=y+th/2;
+      if(left) doc.text(lab, cx-3.7, cy-tw/2, {angle:-90});
+      else doc.text(lab, cx+3.7, cy+tw/2, {angle:90});
+      link(k,tabx,y,TAB,th);
+    });
+  }
+  function arrow(x,y,dir){ doc.setFillColor(...BLACK);
+    if(dir<0) doc.triangle(x+4,y,x+11,y-5,x+11,y+5,"F"); else doc.triangle(x+11,y,x+4,y-5,x+4,y+5,"F"); }
+  function header(title, sub, buttons){
+    font(26,true); col(BLACK); doc.text(title.toUpperCase(), x0, 62);
+    font(11,false); col(GREY); doc.text(sub.toUpperCase(), x0, 80);
+    const bh=22, gap=6, y=50;
+    const ws=buttons.map(b=>b.arrow?26:Math.max(54, (font(9,true), doc.getTextWidth(b.label)+22)));
+    let x=x1-ws.reduce((a,b)=>a+b,0)-gap*(buttons.length-1);
+    buttons.forEach((b,i)=>{
+      const w=ws[i];
+      doc.setDrawColor(...BLACK); doc.setLineWidth(1);
+      doc.setFillColor(...(b.on?BLACK:[255,255,255])); doc.roundedRect(x,y,w,bh,11,11,"FD");
+      if(b.arrow) arrow(x+w/2-7.5, y+bh/2, b.arrow);
+      else { font(9,true); col(b.on?[255,255,255]:BLACK); doc.text(b.label, x+w/2, y+14.6, {align:"center"}); }
+      if(b.key) link(b.key,x,y,w,bh);
+      x+=w+gap;
+    });
+    doc.setDrawColor(...BLACK); doc.setLineWidth(1.6); doc.line(x0,92,x1,92);
+  }
+  function lined(ytop, ybot, step=26, xa=x0, xb=x1){
+    doc.setDrawColor(...LGREY); doc.setLineWidth(0.6);
+    for(let y=ytop; y<=ybot; y+=step) doc.line(xa,y,xb,y);
+  }
+  function checks(xa, xb, ytop, n, step=26){
+    for(let i=0;i<n;i++){ const y=ytop+i*step;
+      doc.setDrawColor(...GREY); doc.setLineWidth(0.6); doc.rect(xa+2, y-11, 9, 9);
+      doc.setDrawColor(...LGREY); doc.line(xa+18, y, xb, y); }
+  }
+  const scopeBtns=(s,on)=>[{label:t.cal,key:s,on:on==="cal"},{label:t.todo,key:s+"t",on:on==="todo"},{label:t.notes,key:s+"n",on:on==="notes"}];
+  let first=true; const page=()=>{ if(!first) doc.addPage([W,H],"portrait"); first=false; };
+
+  // ---- copertina ----
+  page();
+  { const cx=(x0+x1)/2;
+    font(120,true); col(BLACK); doc.text(String(Y), cx, H/2-60, {align:"center"});
+    doc.setDrawColor(...BLACK); doc.setLineWidth(2); doc.line(cx-120,H/2-30,cx+120,H/2-30);
+    font(26,true); doc.text(t.title.toUpperCase(), cx, H/2+10, {align:"center"});
+    font(13,false); col(GREY); doc.text(t.sub.toUpperCase(), cx, H/2+36, {align:"center"});
+    doc.setFillColor(...BLACK); doc.roundedRect(cx-100,H/2+80,200,40,20,20,"F");
+    font(14,true); col([255,255,255]); doc.text(t.t_year.toUpperCase(), cx, H/2+105, {align:"center"});
+    link("y",cx-100,H/2+80,200,40);
+    tabs(null); }
+
+  // ---- anno ----
+  page(); header(String(Y), t.t_year, scopeBtns("y","cal"));
+  { const cw=(x1-x0)/3, top=112, ch=(H-46-top)/4;
+    for(let m=1;m<=12;m++){
+      const c=(m-1)%3, r=Math.floor((m-1)/3), x=x0+c*cw+(c?6:0), w=cw-12, yt=top+r*ch;
+      font(12,true); col(BLACK); doc.text(t.months[m-1].toUpperCase(), x, yt+16);
+      const dw=w/7; font(7.5,true); col(GREY);
+      order.forEach((d,i)=>doc.text(t.d1[d], x+dw*i+dw/2, yt+34, {align:"center"}));
+      let ws=weekStartOf(D(Y,m,1)), wi=0;
+      while(ws<=D(Y,m,new Date(Date.UTC(Y,m,0)).getUTCDate())){
+        for(let i=0;i<7;i++){ const d=addDays(ws,i); if(d.getUTCMonth()!==m-1) continue;
+          const cx=x+dw*i+dw/2, cy=yt+50+wi*17;
+          if(wd(d)>=5){ doc.setFillColor(...FILL); doc.rect(cx-dw/2+1, cy-10.5, dw-2, 15, "F"); }
+          font(9.5,false); col(BLACK); doc.text(String(d.getUTCDate()), cx, cy, {align:"center"});
+          if(o.daily) link("d"+iso(d), cx-dw/2, cy-11, dw, 16);
+        }
+        ws=addDays(ws,7); wi++;
+      }
+      link("m"+m, x, yt+2, w, 20);
+    }
+    tabs("y"); }
+  // to do / note anno
+  const todoPage=(scope, title, sub, tab)=>{
+    page(); header(title, sub, scopeBtns(scope,"todo"));
+    const gap=14, cw=(x1-x0-gap)/2, top=110, bot=H-40, rh=(bot-top-2*gap)/3;
+    for(let r=0;r<3;r++) for(let k=0;k<2;k++){
+      const x=x0+k*(cw+gap), yt=top+r*(rh+gap);
+      doc.setDrawColor(...BLACK); doc.setLineWidth(1); doc.rect(x,yt,cw,22); doc.rect(x+5,yt+6,10,10);
+      let y=yt+46; doc.setLineWidth(0.6);
+      while(y<yt+rh-6){ doc.setDrawColor(...LGREY); doc.line(x+20,y,x+cw,y);
+        doc.setDrawColor(...GREY); doc.rect(x+4,y-11,9,9); y+=24; }
+    }
+    tabs(tab);
+  };
+  const notesPage=(scope,title,sub,tab)=>{ page(); header(title, sub, scopeBtns(scope,"notes")); lined(124, H-44); tabs(tab); };
+  todoPage("y", String(Y), t.t_todo, "y");
+  notesPage("y", String(Y), t.t_notes, "y");
+
+  // ---- mesi ----
+  for(let m=1;m<=12;m++){
+    const mk="m"+m, mn=t.months[m-1];
+    page(); header(mn, String(Y), scopeBtns(mk,"cal"));
+    const last=new Date(Date.UTC(Y,m,0)).getUTCDate();
+    const mweeks=[]; for(let ws=weekStartOf(D(Y,m,1)); ws<=D(Y,m,last); ws=addDays(ws,7)) mweeks.push(ws);
+    const wcol=22, gx0=x0+wcol, cw=(x1-gx0)/7, top=128, bot=H-40, rh=(bot-top)/mweeks.length;
+    font(9,true); col(BLACK);
+    order.forEach((d,i)=>doc.text(t.days[d].slice(0,3).toUpperCase(), gx0+cw*i+cw/2, top-10, {align:"center"}));
+    font(7,true); col(GREY); doc.text(t.wk, x0+wcol/2, top-10, {align:"center"});
+    mweeks.forEach((ws,wi)=>{
+      const yt=top+wi*rh;
+      font(8,false); col(GREY); doc.text(String(isoWeek(mondayOf(ws))), x0+wcol/2, yt+14, {align:"center"});
+      if(o.weekly){ link("w"+weekIdx(ws), x0, yt+2, wcol, 20); }
+      for(let i=0;i<7;i++){
+        const d=addDays(ws,i), x=gx0+i*cw, inm=d.getUTCMonth()===m-1;
+        if(inm && wd(d)>=5){ doc.setFillColor(...FILL); doc.rect(x,yt,cw,rh,"F"); }
+        doc.setDrawColor(...BLACK); doc.setLineWidth(0.7); doc.rect(x,yt,cw,rh);
+        if(inm){ font(12,true); col(BLACK); doc.text(two(d.getUTCDate()), x+5, yt+15);
+          if(o.daily) link("d"+iso(d), x+1, yt+1, 34, 22);
+          else if(o.weekly) link("w"+weekIdx(d), x+1, yt+1, 34, 22); }
+      }
+    });
+    tabs(mk);
+    todoPage(mk, mn, `${t.t_todo} · ${Y}`, mk);
+    notesPage(mk, mn, `${t.t_notes} · ${Y}`, mk);
+  }
+
+  // ---- settimane ----
+  const firstInYear = ws => { for(let i=0;i<7;i++){ const d=addDays(ws,i); if(d.getUTCFullYear()===Y) return d; } };
+  if(o.weekly) weeks.forEach((ws,i)=>{
+    const we=addDays(ws,6), fy=firstInYear(ws), mk="m"+(fy.getUTCMonth()+1);
+    const rng=`${ws.getUTCDate()} ${t.months[ws.getUTCMonth()].slice(0,3)} - ${we.getUTCDate()} ${t.months[we.getUTCMonth()].slice(0,3)} ${Y}`;
+    page();
+    header(`${t.week} ${two(isoWeek(mondayOf(ws)))}`, rng, [
+      {arrow:-1,key:i>0?"w"+(i-1):null},{label:t.bMonth,key:mk},{arrow:1,key:i<weeks.length-1?"w"+(i+1):null}]);
+    const gap=12, cw=(x1-x0-gap)/2, top=106, bot=H-40, rh=(bot-top-3*gap)/4;
+    for(let b=0;b<8;b++){
+      const c=b<4?0:1, r=b%4, x=x0+c*(cw+gap), yt=top+r*(rh+gap);
+      doc.setDrawColor(...BLACK); doc.setLineWidth(1); doc.line(x,yt+20,x+cw,yt+20);
+      if(b<7){ const d=addDays(ws,b), iny=d.getUTCFullYear()===Y;
+        font(11,true); col(iny?BLACK:LGREY);
+        doc.text(`${t.days[wd(d)].toUpperCase()}`, x, yt+14);
+        font(11,true); doc.text(two(d.getUTCDate()), x+cw, yt+14, {align:"right"});
+        if(iny && o.daily) link("d"+iso(d), x, yt, cw, 20);
+      } else { font(11,true); col(BLACK); doc.text(t.notes, x, yt+14); }
+      lined(yt+42, yt+rh-4, 22, x, x+cw);
+    }
+    tabs(mk);
+  });
+
+  // ---- giorni ----
+  if(o.daily) days.forEach((d,i)=>{
+    const k=iso(d), mk="m"+(d.getUTCMonth()+1), dn=t.days[wd(d)];
+    const sub=`${t.months[d.getUTCMonth()]} ${Y} · ${t.week} ${isoWeek(d)} · ${t.doy.replace("{n}",doyOf(d))}`;
+    const prev=i>0?"d"+iso(days[i-1]):null, next=i<days.length-1?"d"+iso(days[i+1]):null;
+    const btns=[{arrow:-1,key:prev}];
+    if(o.weekly) btns.push({label:t.bWeek,key:"w"+weekIdx(d)});
+    btns.push({label:t.bMonth,key:mk});
+    if(o.dnotes) btns.push({label:t.notes,key:"n"+k});
+    btns.push({arrow:1,key:next});
+    page(); header(`${dn} ${two(d.getUTCDate())}`, sub, btns);
+    const sec=(lab,y)=>{ font(9,true); col(BLACK); doc.text(lab.toUpperCase(), x0, y); };
+    sec(t.prio, 118); checks(x0, x1, 144, 3);
+    sec(t.tasks, 222);
+    const half=(x1-x0-20)/2;
+    checks(x0, x0+half, 248, 7); checks(x0+half+20, x1, 248, 7);
+    sec(t.dnotes, 440); lined(466, H-44);
+    tabs(mk);
+    if(o.dnotes){
+      page(); header(`${dn} ${two(d.getUTCDate())}`, `${t.notes} · ${t.months[d.getUTCMonth()]} ${Y}`,
+        [{label:t.bDay,key:"d"+k},{label:t.notes,key:"n"+k,on:true}]);
+      lined(124, H-44); tabs(mk);
+    }
+  });
+
+  const parts=["M"]; if(o.weekly) parts.push("W"); if(o.daily) parts.push("D"); if(o.dnotes) parts.push("N");
+  const fname=`${t.file}_${o.lang.toUpperCase()}_${t.hand[o.hand]}_${t.start[o.start]}_${parts.join("")}.pdf`;
+  return {doc, fname, pages:keys.length};
+}
+
+/* ======================= UI ======================= */
+let lang = (new URLSearchParams(location.search).get("lang") || (navigator.language||"it").slice(0,2)).toLowerCase();
+if(!UI[lang]) lang = "en";
+const $ = s => document.querySelector(s);
+function opts(){
+  const f = n => document.querySelector(`input[name=${n}]`);
+  return {lang, hand:document.querySelector("input[name=hand]:checked").value,
+    start:document.querySelector("input[name=start]:checked").value,
+    weekly:f("weekly").checked, daily:f("daily").checked, dnotes:f("daily").checked && f("dnotes").checked};
+}
+function refresh(){
+  const dn=document.querySelector("input[name=dnotes]"), daily=document.querySelector("input[name=daily]");
+  dn.disabled=!daily.checked; if(!daily.checked) dn.checked=false;
+  $("#pc").textContent = buildPlanner({...opts(), countOnly:true});
+}
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach(el=>el.textContent = UI[lang][el.dataset.t]);
+  document.querySelectorAll(".langs button").forEach(b=>b.classList.toggle("on", b.dataset.lang===lang));
+  document.title = UI[lang].h1;
+  $("#status").textContent = "";
+}
+document.querySelectorAll(".langs button").forEach(b=>b.onclick=()=>{ lang=b.dataset.lang; applyLang();
+  try{ const u=new URL(location.href); u.searchParams.set("lang",lang); history.replaceState(null,"",u); }catch(e){} });
+document.querySelectorAll("input").forEach(i=>i.addEventListener("change", refresh));
+$("#go").onclick = () => {
+  const btn=$("#go"), st=$("#status"); btn.disabled=true; st.textContent=UI[lang].busy;
+  setTimeout(()=>{
+    try{ const {doc,fname}=buildPlanner(opts()); doc.save(fname); st.textContent=UI[lang].done.replace("{f}",fname); }
+    catch(e){ console.error(e); st.textContent=UI[lang].err; }
+    btn.disabled=false;
+  }, 60);
+};
+applyLang(); refresh();
+</script>
+</body>
+</html>
